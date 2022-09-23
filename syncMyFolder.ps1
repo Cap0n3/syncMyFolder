@@ -1,6 +1,6 @@
 <#
     .SYNOPSIS
-    This PowerShell script syncs two folders. Created by cap0n3.
+    This PowerShell script syncs two folders. Created by Cap0n3.
 
     .DESCRIPTION
     Script to sync two folders in mirror.
