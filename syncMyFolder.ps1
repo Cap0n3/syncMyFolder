@@ -113,7 +113,7 @@ Write-Log "{INFO} Comparing folders '$($folderpath1)' and '$($folderpath2)'"
 if ($files_diff -eq $null) {
     Write-Log "{INFO} Folders are in sync !"
     Write-Log "{INFO} Exiting script !"
-    Prompt-Clean # For testing
+    Prompt-Clean # UNCOMMENT FOR TESTING
     Exit
 }
 
