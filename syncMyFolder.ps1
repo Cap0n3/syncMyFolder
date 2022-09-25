@@ -6,7 +6,7 @@
     Script to sync two folders in mirror.
 
     .NOTES
-    For testing please uncomment line 92 and 143 (Prompt-Clean function). If you wish, you can create new test folders with custom 
+    For testing please uncomment line 140 and 200 (Prompt-Clean function). If you wish, you can create new test folders with custom 
     structure for testing, just name new folders 'testFolder3', 'testFolder4', etc ... and create a zip backup placed in folder '0_backup_zip'. 
     Run Script with lines uncommented and say 'No' when prompted to check if testFolders content fits expected results, then run script 
     again and say 'Yes' when prompted to re-initialize testFolders to original structure.
@@ -55,7 +55,6 @@ function Write-Log {
     Add-content $logfile -value $log_message
 }
 
-# === For testing ===
 function Clean-Tests {
     <#
     Function unzip test folders and replace old ones in tests/. Used to restart testing.
