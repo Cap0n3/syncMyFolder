@@ -45,8 +45,8 @@ $global:testfolder = "$currentdir\tests"
 # ============ UTILS ============ #
 # =============================== #
 
-
 $logfile = "$currentdir\logs\{$($script_time)}_syncMyFolder.log"
+
 function Write-Log {
     <# Custom logging utility #>
     param([String]$message)
@@ -55,7 +55,7 @@ function Write-Log {
     Add-content $logfile -value $log_message
 }
 
-# For testing
+# === For testing ===
 function Clean-Tests {
     <#
     Function unzip test folders and replace old ones in tests/. Used to restart testing.
@@ -92,41 +92,75 @@ function Prompt-Clean {
         Write-Host "`Testing folders cleaned, all ready for new tests !" -ForegroundColor Green
     } 
     elseif ($decision -eq 1) {
-        Write-Host "Testing folders not touched, go check results in testfodlers." -ForegroundColor cyan
+        Write-Host "Testing folders not touched, go check results in test folders." -ForegroundColor cyan
     }
+}
+
+function Compare-Folders {
+    <# 
+        Check if given folder paths exists and are folders indeed. Then compare their contents and return difference or log and 
+        exit if they're are in sync. 
+    #>
+    param(
+        [Parameter(Mandatory,Position=0)]
+        [String]$src_folder,
+        [Parameter(Mandatory,Position=1)]
+        [String]$tgt_folder
+    )
+    # First check if given paths exists
+    if(!(Test-Path $src_folder)) {
+        Write-Log "{ERROR} (Compare-Folders) Source folder was not found ! Given path : '$($src_folder)'"
+        throw "Source folder was not found ! Check path : '$($src_folder)'"
+        Exit
+    }
+    if(!(Test-Path $tgt_folder)) {
+        Write-Log "{ERROR} (Compare-Folders) Target folder was not found ! Given path : '$($tgt_folder)'"
+        throw "Target folder was not found ! Check path : '$($tgt_folder)'"
+        Exit
+    }
+    # Then if given path are folders
+    if(!((Get-Item $src_folder) -is [System.IO.DirectoryInfo])) {
+        Write-Log "{ERROR} (Compare-Folders) Given source folder is not a folder ! Given path : '$($src_folder)'"
+        throw "Given source folder is not a folder ! Check path : '$($src_folder)'"
+        Exit
+    }
+    if(!((Get-Item $tgt_folder) -is [System.IO.DirectoryInfo])) {
+        Write-Log "{ERROR} (Compare-Folders) Given target folder is not a folder ! Given path : '$($tgt_folder)'"
+        throw "Given target folder is not a folder ! Check path : '$($tgt_folder)'"
+        Exit
+    }
+
+    # Get elements & compare source & target folders
+    $src_folder_items = Get-ChildItem -Path $src_folder -Recurse
+    $tgt_folder_items = Get-ChildItem -Path $tgt_folder -Recurse
+    $folder_diff = Compare-Object -ReferenceObject $src_folder_items -DifferenceObject $tgt_folder_items
+    # Exit script if folders are already in sync
+    if ($folder_diff -eq $null) {
+        Write-Log "{INFO} (Compare-Folders) Folders are in sync !"
+        Write-Log "{INFO} (Compare-Folders) Exiting script !"
+        Prompt-Clean # UNCOMMENT FOR TESTING
+        Exit
+    } else {
+        # If they're not in sync log & return difference
+        Write-Log "====== COMPARE OBJECT ======"
+        $folder_diff  | foreach {
+            $filepath = $_.InputObject.FullName
+            $indicator = $_.SideIndicator
+            Write-Log "{INFO} (Compare-Folders) [$($indicator)] '$($filepath)'"
+        }
+        return $folder_diff 
+    }   
 }
 
 # ============================== #
 # ============ SYNC ============ #
 # ============================== #
 
-# Get folders content
-$folder1_files = Get-ChildItem -Path $folderpath1 -Recurse
-$folder2_files = Get-ChildItem -Path $folderpath2 -Recurse
-# Compare two folders
-$files_diff = Compare-Object -ReferenceObject $folder1_files -DifferenceObject $folder2_files
-
-# === Log informations about sync === #
-Write-Log "====== COMPARE OBJECT ======"
-Write-Log "{INFO} Comparing folders '$($folderpath1)' and '$($folderpath2)'"
-# Exit script if folders are already in sync
-if ($files_diff -eq $null) {
-    Write-Log "{INFO} Folders are in sync !"
-    Write-Log "{INFO} Exiting script !"
-    Prompt-Clean # UNCOMMENT FOR TESTING
-    Exit
-}
-
-# Else log Compare-Object results
-$files_diff | foreach {
-    $filepath = $_.InputObject.FullName
-    $indicator = $_.SideIndicator
-    Write-Log "[$($indicator)] '$($filepath)'"
-}
+$comparison = Compare-Folders $folderpath1 $folderpath2
 
 # === Start sync === #
 Write-Log "====== START SYNC ======"
-$files_diff | foreach {
+$comparison | foreach {
     # Get file full path
     $filepath = $_.InputObject.FullName
 
