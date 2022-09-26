@@ -141,8 +141,8 @@ function Create-ExceptArrays {
             $tgt_exceptions+=$file_name
         }
     }
-    Write-Log "{INFO} Exceptions for source folder : $($src_exceptions)"
-    Write-Log "{INFO} Exceptions for target folder : $($tgt_exceptions)"
+    Write-Log "{INFO}(Create-ExceptArrays) Exceptions for source folder : $($src_exceptions)"
+    Write-Log "{INFO}(Create-ExceptArrays) Exceptions for target folder : $($tgt_exceptions)"
     return $src_exceptions, $tgt_exceptions
 }
 
@@ -176,33 +176,35 @@ function Compare-Folders {
     )
     # First check if given paths exists
     if(!(Test-Path $src_folder)) {
-        Write-Log "{ERROR} (Compare-Folders) Source folder was not found ! Given path : '$($src_folder)'"
+        Write-Log "{ERROR}(Compare-Folders) Source folder was not found ! Given path : '$($src_folder)'"
         throw "Source folder was not found ! Check path : '$($src_folder)'"
         Exit
     }
     if(!(Test-Path $tgt_folder)) {
-        Write-Log "{ERROR} (Compare-Folders) Target folder was not found ! Given path : '$($tgt_folder)'"
+        Write-Log "{ERROR}(Compare-Folders) Target folder was not found ! Given path : '$($tgt_folder)'"
         throw "Target folder was not found ! Check path : '$($tgt_folder)'"
         Exit
     }
     # Then if given path are folders
     if(!((Get-Item $src_folder) -is [System.IO.DirectoryInfo])) {
-        Write-Log "{ERROR} (Compare-Folders) Given source folder is not a folder ! Given path : '$($src_folder)'"
+        Write-Log "{ERROR}(Compare-Folders) Given source folder is not a folder ! Given path : '$($src_folder)'"
         throw "Given source folder is not a folder ! Check path : '$($src_folder)'"
         Exit
     }
     if(!((Get-Item $tgt_folder) -is [System.IO.DirectoryInfo])) {
-        Write-Log "{ERROR} (Compare-Folders) Given target folder is not a folder ! Given path : '$($tgt_folder)'"
+        Write-Log "{ERROR}(Compare-Folders) Given target folder is not a folder ! Given path : '$($tgt_folder)'"
         throw "Given target folder is not a folder ! Check path : '$($tgt_folder)'"
         Exit
     }
 
     # Get elements & exclude files from exclusion list
     if(!($src_excludes_array -eq $null) -and !($src_excludes_array -eq $null)) {
+        Write-Log "{INFO}(Compare-Folders) Taking into account exclusions from arrays."
         $src_folder_items = Get-ChildItem -Path $src_folder -Recurse -Exclude $src_excludes_array
         $tgt_folder_items = Get-ChildItem -Path $tgt_folder -Recurse -Exclude $tgt_excludes_array
     } else {
         # If there's no exclusions
+        Write-Log "{INFO}(Compare-Folders) Nothing to exclude"
         $src_folder_items = Get-ChildItem -Path $src_folder -Recurse
         $tgt_folder_items = Get-ChildItem -Path $tgt_folder -Recurse
     }
@@ -211,8 +213,8 @@ function Compare-Folders {
     $folder_diff = Compare-Object -ReferenceObject $src_folder_items -DifferenceObject $tgt_folder_items
     # Exit script if folders are already in sync
     if ($folder_diff -eq $null) {
-        Write-Log "{INFO} (Compare-Folders) Folders are in sync !"
-        Write-Log "{INFO} (Compare-Folders) Exiting script !"
+        Write-Log "{INFO}(Compare-Folders) Folders are in sync !"
+        Write-Log "{INFO}(Compare-Folders) Exiting script !"
         Prompt-Clean # UNCOMMENT FOR TESTING
         Exit
     } else {
@@ -221,7 +223,7 @@ function Compare-Folders {
         $folder_diff  | foreach {
             $filepath = $_.InputObject.FullName
             $indicator = $_.SideIndicator
-            Write-Log "{INFO} (Compare-Folders) [$($indicator)] '$($filepath)'"
+            Write-Log "{INFO}(Compare-Folders) [$($indicator)] '$($filepath)'"
         }
         return $folder_diff 
     }   
