@@ -202,13 +202,10 @@ function Compare-Folders {
         $src_folder_items = Get-ChildItem -Path $src_folder -Recurse -Exclude $src_excludes_array
         $tgt_folder_items = Get-ChildItem -Path $tgt_folder -Recurse -Exclude $tgt_excludes_array
     } else {
+        # If there's no exclusions
         $src_folder_items = Get-ChildItem -Path $src_folder -Recurse
         $tgt_folder_items = Get-ChildItem -Path $tgt_folder -Recurse
     }
-
-    # Remove elements if in exception list
-    write-host $src_folder_items
-    write-host $tgt_folder_items
 
     # Compare folders
     $folder_diff = Compare-Object -ReferenceObject $src_folder_items -DifferenceObject $tgt_folder_items
