@@ -1,0 +1,4 @@
+[src] doNotSync1.png
+[src] doNotSync2.jpg
+[tgt] DoNotRemove1.gp7
+[tgt] DoNotRemove2.doc

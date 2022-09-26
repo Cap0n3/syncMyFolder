@@ -2,7 +2,9 @@
 
 A `target folder` with different files and folders in it **BUT ONE folder AND a file identical from `source folder`.**
 
-Everything should be erased from `target folder` (Folder2) including file `ToRemoveSub1.rtf` AND replaced with `source folder` (Folder1) content.
+## Goal
+
+Remove files `ToRemove.jpg`, `ToRemoveSub1.rtf` AND folder `SubFolder2` to match `source folder` (Folder1) content.
 
 ## Structure
 
