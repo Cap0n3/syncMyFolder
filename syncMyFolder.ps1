@@ -133,12 +133,17 @@ function Create-ExceptArrays {
         # Exception for source or target folder ?
         $which_exception =  $PSItem.SubString(0, 5)
         # Start at 6 to avoid selecting space char
-        $file_name = $PSItem.SubString(6)
+        $file_path = $PSItem.SubString(6)
+        # Test if path exists
+        if(!(Test-Path $file_path)){
+            Write-Log "{ERROR}(Create-ExceptArrays) Path in file '$($except_file)' was not found ! Given path : '$($file_path)'"
+            throw "Path in file '$($except_file)' was not found ! Check path : '$($file_path)'"
+        }
         if($which_exception -eq "[src]"){
-            $src_exceptions+=$file_name
+            $src_exceptions+=$file_path
         }
         elseif ($which_exception -eq "[tgt]") {
-            $tgt_exceptions+=$file_name
+            $tgt_exceptions+=$file_path
         }
     }
     Write-Log "{INFO}(Create-ExceptArrays) Exceptions for source folder : $($src_exceptions)"
@@ -168,11 +173,7 @@ function Compare-Folders {
         [Parameter(Mandatory,Position=0)]
         [String]$src_folder,
         [Parameter(Mandatory,Position=1)]
-        [String]$tgt_folder,
-        [Parameter(Mandatory=$false,Position=2)]
-        [array]$src_excludes_array,
-        [Parameter(Mandatory=$false,Position=3)]
-        [array]$tgt_excludes_array
+        [String]$tgt_folder
     )
     # First check if given paths exists
     if(!(Test-Path $src_folder)) {
@@ -197,17 +198,10 @@ function Compare-Folders {
         Exit
     }
 
-    # Get elements & exclude files from exclusion list
-    if(!($src_excludes_array -eq $null) -and !($src_excludes_array -eq $null)) {
-        Write-Log "{INFO}(Compare-Folders) Taking into account exclusions from arrays."
-        $src_folder_items = Get-ChildItem -Path $src_folder -Recurse -Exclude $src_excludes_array
-        $tgt_folder_items = Get-ChildItem -Path $tgt_folder -Recurse -Exclude $tgt_excludes_array
-    } else {
-        # If there's no exclusions
-        Write-Log "{INFO}(Compare-Folders) Nothing to exclude"
-        $src_folder_items = Get-ChildItem -Path $src_folder -Recurse
-        $tgt_folder_items = Get-ChildItem -Path $tgt_folder -Recurse
-    }
+    # Get elements
+    Write-Log "{INFO}(Compare-Folders) Nothing to exclude"
+    $src_folder_items = Get-ChildItem -Path $src_folder -Recurse
+    $tgt_folder_items = Get-ChildItem -Path $tgt_folder -Recurse
 
     # Compare folders
     $folder_diff = Compare-Object -ReferenceObject $src_folder_items -DifferenceObject $tgt_folder_items
@@ -233,19 +227,31 @@ function Compare-Folders {
 # ============ SYNC ============ #
 # ============================== #
 
-# Folder comparison (with or without exclusion files)
-if(!($exceptions_file -eq "")) {
-    # Get exception files in arrays (if any) & Compare source & folder (with exclusions)
-    # Create empty array for exclusions
-    $source_exceptions = @()
-    $target_exceptions = @()
-    $source_exceptions, $target_exceptions = Create-ExceptArrays $exceptions_file
-    # Pass exclusions to exclude them from comparison
-    $comparison = Compare-Folders $folderpath1 $folderpath2 $source_exceptions $target_exceptions
+# Create exclusion arrays for source and target
+$source_exceptions = @()
+$target_exceptions = @()
+$source_exceptions, $target_exceptions = Create-ExceptArrays $exceptions_file
+
+# === A) Copy target exclusion files in tmp folder ===
+# Create tmp folder to store target exclusion files (if it doesn't exist)
+if (!(Test-Path "$currentdir\tmp" -PathType Container)) {
+    Write-Log "{INFO} Created tmp directory to store target exclusion files"
+    New-Item -ItemType Directory -Force -Path "$currentdir\tmp"
 } else {
-    # No exclusions, simply compare source & target folders
-    $comparison = Compare-Folders $folderpath1 $folderpath2
+    # If it already exists, clean content
+    Write-Log "{INFO} Cleaned tmp directory !"
+    Get-ChildItem -Path "$currentdir\tmp" -File -Recurse | foreach { $_.Delete()}
 }
+
+# Copy target exclusion files in tmp
+$target_exceptions | Foreach-Object {
+    Copy-Item -Path $PSItem -Destination "$currentdir\tmp"
+}
+
+# B) === Once sync done, remove source exclusion files in target folder & put target exclusion files back ===
+
+# Compare source & target folders
+$comparison = Compare-Folders $folderpath1 $folderpath2
 
 # === Start sync === #
 Write-Log "====== START SYNC ======"
@@ -257,7 +263,7 @@ $comparison | foreach {
         # === Then file is only in SOURCE folder === #
         try {
             # Copy file to target folder
-            Write-Log "{INFO} COPYING '$($filepath)' IN FOLDER '$($filepath)'"
+            Write-Log "{INFO} COPYING '$($filepath)' IN FOLDER '$($folderpath2)'"
             Copy-Item -Path $filepath -Destination $folderpath2 -Recurse
         }
         catch {
