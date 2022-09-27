@@ -308,6 +308,9 @@ $comparison | foreach {
       
 # }
 
+# ====== LAST CHECK ====== #
+Compare-Folders $folderpath1 $folderpath2
+
 # ========================================== #
 # ============ FOR TESTING ONLY ============ #
 # ========================================== #
