@@ -12,23 +12,23 @@
     again and say 'Yes' when prompted to re-initialize testFolders to original structure.
 #>
 
-[CmdletBinding()]
-Param(
-    [Parameter(Mandatory, Position=0)]
-    [String]$folderpath1,
-    [Parameter(Mandatory, Position=1)]
-    [String]$folderpath2,
-    [Parameter(Mandatory=$false)]
-    [alias("f")][String]$exceptions_file
-)
+# [CmdletBinding()]
+# Param(
+#     [Parameter(Mandatory, Position=0)]
+#     [String]$folderpath1,
+#     [Parameter(Mandatory, Position=1)]
+#     [String]$folderpath2,
+#     [Parameter(Mandatory=$false)]
+#     [alias("f")][String]$exceptions_file
+# )
 
 # ================================ #
 # ============ SET-UP ============ #
 # ================================ #
 
 # Source & Target Folder
-$global:folderpath1 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder3\Folder1"
-$global:folderpath2 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder3\Folder2"
+$global:folderpath1 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder2\Folder1"
+$global:folderpath2 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder2\Folder2"
 
 # Get script current directory
 $global:currentdir = (Get-Location).toString()
@@ -199,12 +199,14 @@ function Compare-Folders {
     }
 
     # Get elements
-    Write-Log "{INFO}(Compare-Folders) Nothing to exclude"
-    $src_folder_items = Get-ChildItem -Path $src_folder -Recurse
-    $tgt_folder_items = Get-ChildItem -Path $tgt_folder -Recurse
+    $objects = @{
+        ReferenceObject = (Get-ChildItem -Path $src_folder -Recurse)
+        DifferenceObject = (Get-ChildItem -Path $tgt_folder -Recurse)
+      }
 
     # Compare folders
-    $folder_diff = Compare-Object -ReferenceObject $src_folder_items -DifferenceObject $tgt_folder_items
+    $folder_diff = Compare-Object @objects
+
     # Exit script if folders are already in sync
     if ($folder_diff -eq $null) {
         Write-Log "{INFO}(Compare-Folders) Folders are in sync !"
@@ -226,29 +228,31 @@ function Compare-Folders {
 # ============================== #
 # ============ SYNC ============ #
 # ============================== #
+# Prompt-Clean
+# Exit
 
 # Create exclusion arrays for source and target
-$source_exceptions = @()
-$target_exceptions = @()
-$source_exceptions, $target_exceptions = Create-ExceptArrays $exceptions_file
+# if(!($exceptions_file -eq "")){
+#     $source_exceptions = @()
+#     $target_exceptions = @()
+#     $source_exceptions, $target_exceptions = Create-ExceptArrays $exceptions_file
 
-# === A) Copy target exclusion files in tmp folder ===
-# Create tmp folder to store target exclusion files (if it doesn't exist)
-if (!(Test-Path "$currentdir\tmp" -PathType Container)) {
-    Write-Log "{INFO} Created tmp directory to store target exclusion files"
-    New-Item -ItemType Directory -Force -Path "$currentdir\tmp"
-} else {
-    # If it already exists, clean content
-    Write-Log "{INFO} Cleaned tmp directory !"
-    Get-ChildItem -Path "$currentdir\tmp" -File -Recurse | foreach { $_.Delete()}
-}
+#     # Create tmp folder to store target exclusion files (if it doesn't exist)
+#     if (!(Test-Path "$currentdir\tmp" -PathType Container)) {
+#         Write-Log "{INFO} Created tmp directory to store target exclusion files"
+#         New-Item -ItemType Directory -Force -Path "$currentdir\tmp"
+#     } else {
+#         # If it already exists, clean content
+#         Write-Log "{INFO} Cleaned tmp directory !"
+#         Get-ChildItem -Path "$currentdir\tmp" -File -Recurse | foreach { $_.Delete()}
+#     }
 
-# Copy target exclusion files in tmp
-$target_exceptions | Foreach-Object {
-    Copy-Item -Path $PSItem -Destination "$currentdir\tmp"
-}
-
-# B) === Once sync done, remove source exclusion files in target folder & put target exclusion files back ===
+#     # Copy target exclusion files in tmp
+#     $target_exceptions | Foreach-Object {
+#         Write-Log "{INFO} Copied target exclusion files in tmp folder"
+#         Copy-Item -Path $PSItem -Destination "$currentdir\tmp"
+#     }
+# }
 
 # Compare source & target folders
 $comparison = Compare-Folders $folderpath1 $folderpath2
@@ -287,6 +291,22 @@ $comparison | foreach {
         }
     }
 }
+
+# Remove source exclusion files in target folder & put target exclusion files back
+# if(!($exceptions_file -eq "")){
+#     $source_exceptions | ForEach-Object {
+#         <# 
+#         Replace first part of path from source folder with path from target folder.
+#         It's necessary to find files that shouldn't be synced and erased them from
+#         target folder.
+#         Ex : C:\Users\Kim\source\myFile1.txt => C:\Users\Kim\target\myFile1.txt 
+#         #>
+#         $new_path = $PSItem -replace [regex]::Escape($folderpath1), "$folderpath2"
+#         Write-Log "{INFO} Removing file from target folder at path : $($new_path)"
+#         Remove-Item -Path $new_path
+#     }
+      
+# }
 
 # ========================================== #
 # ============ FOR TESTING ONLY ============ #
