@@ -27,8 +27,8 @@
 # ================================ #
 
 # Source & Target Folder
-$global:folderpath1 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder2\Folder1"
-$global:folderpath2 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder2\Folder2"
+$global:folderpath1 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder3\Folder1"
+$global:folderpath2 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder3\Folder2"
 
 # Get script current directory
 $global:currentdir = (Get-Location).toString()
@@ -225,6 +225,50 @@ function Compare-Folders {
     }   
 }
 
+function Split-FullPath {
+    <#
+    .SYNOPSIS
+        Split given path in two parts.
+    
+    .DESCRIPTION
+        This utility function split path in two parts depending on source or target absolute path, it'll split at source folder 
+        absolute path and at file relative path. 
+        For instance, take this path to a file in source folder "C:\Users\Kim\\SourceFolder\SubFolder1\ToRemove.jpg"
+
+        - Function would split absolute path to source : "C:\Users\Kim\\SourceFolder" and return it.
+        - Plus it would return relative path to file (or folder) : "SubFolder1\ToRemove.jpg"
+        
+        Note : To correctly split path, function needs absolute path to source
+
+    .PARAMETER path_to_split
+        Path to split
+    
+    .PARAMETER folder_abs_path
+        Source or Target absolute path
+    
+    .OUTPUTS
+        Returns arrays with absolute path to source AND relative path to file (or folder)
+    #>
+    param(
+        [Parameter(Mandatory,Position=0)]
+        [String]$path_to_split,
+        [Parameter(Mandatory,Position=1)]
+        [String]$folder_abs_path
+    )
+    Write-Log "{DEBUG}(Split-FullPath) Path to split : $path_to_split" 
+    Write-Log "{DEBUG}(Split-FullPath) Absolute path to folder : $folder_abs_path"
+    $result = @()
+    # Split first part of path (source or target) and second (file relative path)
+    # Out-null to avoid placing boolean in result array
+    ($path_to_split -match [regex]::Escape($folder_abs_path)) | out-null
+    $source_abs_path = $matches[0]
+    $result += $source_abs_path
+    # Remove path to source/target folder
+    $file_rel_path = $path_to_split -replace [regex]::Escape($source_abs_path), ""
+    $result += $file_rel_path
+    return $result
+}
+
 # ============================== #
 # ============ SYNC ============ #
 # ============================== #
@@ -260,15 +304,23 @@ $comparison = Compare-Folders $folderpath1 $folderpath2
 # === Start sync === #
 Write-Log "====== START SYNC ======"
 $comparison | foreach {
-    # Get file full path
-    $filepath = $_.InputObject.FullName
+    # Get current item full path
+    $item_path = $_.InputObject.FullName
 
     if ($_.SideIndicator -eq "<=") {
         # === Then file is only in SOURCE folder === #
         try {
-            # Copy file to target folder
-            Write-Log "{INFO} COPYING '$($filepath)' IN FOLDER '$($folderpath2)'"
-            Copy-Item -Path $filepath -Destination $folderpath2 -Recurse
+            # COPY FILE/FOLDER TO TARGET FOLDER
+            # Get second only second part of path (file/folder relative path)
+            $path_split = Split-FullPath $item_path $folderpath1
+            <# 
+            Update target folder absolute path with relative path to file/folder to respect tree structure.
+            Allow to recreate path, for instance "C:\Users\Kim\Source\Subfolder1\myVids\myVid.mov" would be 
+            transformed to "C:\Users\Kim\Target\Subfolder1\myVids\myVid.mov"
+            #>
+            $updated_path = $folderpath2 + $path_split[1]
+            Write-Log "{INFO} COPYING '$($item_path)' IN FOLDER '$($updated_path)'"
+            Copy-Item -Path $item_path -Destination $updated_path -Recurse
         }
         catch {
             Write-Log "{ERROR} An error occured !"
@@ -279,11 +331,11 @@ $comparison | foreach {
         # === Then file is only in TARGET folder === #
         try {
             # Remove file from target folder
-            Write-Log "{INFO} REMOVING '$($filepath)' IN FOLDER '$($folderpath2)'"
-            Remove-Item -Path $filepath -Recurse   
+            Write-Log "{INFO} REMOVING '$($item_path)' IN FOLDER '$($folderpath2)'"
+            Remove-Item -Path $item_path -Recurse   
         } 
         catch [System.Management.Automation.ItemNotFoundException] {
-            Write-Log "{WARNING} File not found : '$($filepath)'"
+            Write-Log "{WARNING} File not found : '$($item_path)'"
         }
         catch {
             Write-Log "{ERROR} An error occured !"
