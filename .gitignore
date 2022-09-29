@@ -4,6 +4,7 @@
 .history
 
 # == MISC == #
+exceptions.txt
 /build
 /logs
 /tmp
