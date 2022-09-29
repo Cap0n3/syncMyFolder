@@ -33,8 +33,6 @@ Param(
     [String]$folderpath2,
     [Parameter(Mandatory=$false, Position=2)]
     [String]$Test
-    # [Parameter(Mandatory=$false)]
-    # [alias("f")][String]$exceptions_file
 )
 
 # ================================ #
