@@ -6,35 +6,53 @@
     Script to sync two folders in mirror.
 
 .NOTES
-    For testing please uncomment line 140 and 200 (Prompt-Clean function). If you wish, you can create new test folders with custom 
-    structure for testing, just name new folders 'testFolder3', 'testFolder4', etc ... and create a zip backup placed in folder '0_backup_zip'. 
-    Run Script with lines uncommented and say 'No' when prompted to check if testFolders content fits expected results, then run script 
-    again and say 'Yes' when prompted to re-initialize testFolders to original structure.
+    For testing simply add flag `-Test <testFolder>` to command, for example to test folder 2 :
+    
+    .\syncMyFolder.ps1 Fol1 Fol2 -Test testFolder2
+
+    If you wish, you can create new test folders with custom structure for testing, just name new folders 'testFolder7', 
+    'testFolder8', etc ... and create a zip backup placed in folder '0_backup_zip' (used to restore original structure of 
+    test folder). 
+    
+    Run Script with test flag and either :
+    - Say 'No' when prompted to check if testFolders content fits expected results. Then, run script again and say 'Yes' 
+      when prompted to re-initialize testFolders to original structure.
+    - Don't do anything, check if testFolders content fits expected results (Go to logs to see if folders are in sync) and
+      if everything is ok, enter 'Y'.
+
+.EXAMPLE
+    To sync in mirror Folder1 do :
+    .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2
 #>
 
-# [CmdletBinding()]
-# Param(
-#     [Parameter(Mandatory, Position=0)]
-#     [String]$folderpath1,
-#     [Parameter(Mandatory, Position=1)]
-#     [String]$folderpath2,
-#     [Parameter(Mandatory=$false)]
-#     [alias("f")][String]$exceptions_file
-# )
+[CmdletBinding()]
+Param(
+    [Parameter(Mandatory, Position=0)]
+    [String]$folderpath1,
+    [Parameter(Mandatory, Position=1)]
+    [String]$folderpath2,
+    [Parameter(Mandatory=$false, Position=2)]
+    [String]$Test
+    # [Parameter(Mandatory=$false)]
+    # [alias("f")][String]$exceptions_file
+)
 
 # ================================ #
 # ============ SET-UP ============ #
 # ================================ #
-
-# Source & Target Folder
-$global:folderpath1 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder4\Folder1"
-$global:folderpath2 = "C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder4\Folder2"
 
 # Get script current directory
 $global:currentdir = (Get-Location).toString()
 
 # Script execution time stamp
 $global:script_time = (Get-Date).toString("yyMMdd_HHmmss")
+
+# Change Source & Target Folder for testing
+if (!($Test -eq "")) {
+    Write-Host "`n[TEST] Testing enabled for folder '$Test'" -ForegroundColor Cyan
+    $global:folderpath1 = "$currentdir\tests\$Test\Folder1"
+    $global:folderpath2 = "$currentdir\tests\$Test\Folder2"
+}
 
 # Create logs folder (if it doesn't exist)
 if (!(Test-Path "$currentdir\logs" -PathType Container)) {
@@ -211,7 +229,10 @@ function Compare-Folders {
     if ($folder_diff -eq $null) {
         Write-Log "{INFO}(Compare-Folders) Folders are in sync !"
         Write-Log "{INFO}(Compare-Folders) Exiting script !"
-        Prompt-Clean # UNCOMMENT FOR TESTING
+        if (!($Test -eq "")) {
+            Write-Host "[OK] Test was a success ! Folders are in sync !" -ForegroundColor Green
+            Prompt-Clean # FOR TESTING
+        }
         Exit
     } else {
         # If they're not in sync log & return difference
@@ -360,12 +381,9 @@ $comparison | foreach {
       
 # }
 
-# ====== LAST CHECK ====== #
+# ====== LAST CHECKS ====== #
 Compare-Folders $folderpath1 $folderpath2
 
-# ========================================== #
-# ============ FOR TESTING ONLY ============ #
-# ========================================== #
-
-# UNCOMMENT FOR TESTING
-Prompt-Clean
+if (!($Test -eq "")) {
+    Prompt-Clean # FOR TESTING
+}
