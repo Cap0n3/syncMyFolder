@@ -33,11 +33,7 @@ Param(
     [String]$folderpath2,
     [Parameter(Mandatory=$false, Position=2)]
     [String]$Test
-    # [Parameter(Mandatory=$false)]
-    # [alias("f")][String]$exceptions_file
 )
-
-#path_to_split
 
 # ================================ #
 # ============ SET-UP ============ #
@@ -295,31 +291,6 @@ function Split-FullPath {
 # ============================== #
 # ============ SYNC ============ #
 # ============================== #
-# Prompt-Clean
-# Exit
-
-# Create exclusion arrays for source and target
-# if(!($exceptions_file -eq "")){
-#     $source_exceptions = @()
-#     $target_exceptions = @()
-#     $source_exceptions, $target_exceptions = Create-ExceptArrays $exceptions_file
-
-#     # Create tmp folder to store target exclusion files (if it doesn't exist)
-#     if (!(Test-Path "$currentdir\tmp" -PathType Container)) {
-#         Write-Log "{INFO} Created tmp directory to store target exclusion files"
-#         New-Item -ItemType Directory -Force -Path "$currentdir\tmp"
-#     } else {
-#         # If it already exists, clean content
-#         Write-Log "{INFO} Cleaned tmp directory !"
-#         Get-ChildItem -Path "$currentdir\tmp" -File -Recurse | foreach { $_.Delete()}
-#     }
-
-#     # Copy target exclusion files in tmp
-#     $target_exceptions | Foreach-Object {
-#         Write-Log "{INFO} Copied target exclusion files in tmp folder"
-#         Copy-Item -Path $PSItem -Destination "$currentdir\tmp"
-#     }
-# }
 
 # Compare source & target folders
 $comparison = Compare-Folders $folderpath1 $folderpath2
@@ -365,23 +336,6 @@ $comparison | foreach {
             Write-Log "{ERROR} Error type : $_"
         }
     }
-}
-
-# Remove source exclusion files in target folder & put target exclusion files back
-# if(!($exceptions_file -eq "")){
-#     $source_exceptions | ForEach-Object {
-#         <# 
-#         Replace first part of path from source folder with path from target folder.
-#         It's necessary to find files that shouldn't be synced and erased them from
-#         target folder.
-#         Ex : C:\Users\Kim\source\myFile1.txt => C:\Users\Kim\target\myFile1.txt 
-#         #>
-#         $new_path = $PSItem -replace [regex]::Escape($folderpath1), "$folderpath2"
-#         Write-Log "{INFO} Removing file from target folder at path : $($new_path)"
-#         Remove-Item -Path $new_path
-#     }
-      
-# }
 
 # ====== LAST CHECKS ====== #
 Compare-Folders $folderpath1 $folderpath2
