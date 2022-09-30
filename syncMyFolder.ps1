@@ -225,6 +225,7 @@ function Compare-Folders {
 
     # Exit script if folders are already in sync
     if ($folder_diff -eq $null) {
+        Write-Host "Folders are in sync !" -ForegroundColor Green
         Write-Log "{INFO}(Compare-Folders) Folders are in sync !"
         Write-Log "{INFO}(Compare-Folders) Exiting script !"
         if (!($Test -eq "")) {
