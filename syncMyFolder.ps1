@@ -46,13 +46,9 @@ Param(
     [Parameter(Mandatory, Position=1)]
     [String]$target_folder,
     [Parameter(Mandatory=$false, Position=2)]
-<<<<<<< HEAD
-    [String]$Test
-=======
     [String]$Test,
     [Parameter(Mandatory=$false)]
     [alias("f")][String]$exceptions_file
->>>>>>> develop
 )
 
 # ================================ #
