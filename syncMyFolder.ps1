@@ -1,9 +1,10 @@
 <#
 .SYNOPSIS
-    This PowerShell script syncs two folders. Created by Cap0n3.
+    This PowerShell script syncs two folders (source, target). Created by Cap0n3.
 
 .DESCRIPTION
-    Script to sync two folders in mirror.
+    Script to sync two directories in mirror. It also accept an exclusion list to exclude specific folders (and it's content) 
+    or files from source or target directory.
 
 .NOTES
     For testing simply add flag `-Test <testFolder>` to command, for example to test folder 2 :
@@ -21,8 +22,21 @@
       if everything is ok, enter 'Y'.
 
 .EXAMPLE
-    To sync in mirror Folder1 do :
+    To sync in mirror Folder1 (source) with Folder2 (target) do :
     .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2
+
+.EXAMPLE
+    To sync in mirror Folder1 (source) but exclude from sync some files/folder from source or target :
+    .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2 -f myExclusion.txt
+
+    The file "myExclusion.txt" (can be named differently) should have this formating [<src/tgt>] <path> like this :
+
+    [src] C:\Users\Kim\Folder1\SubFolder1\doNotSyncDir
+    [src] C:\Users\Kim\Folder1\SubFolder1\doNotSync1.png
+    [src] C:\Users\Kim\Folder1\doNotSync2.jpg
+    [tgt] C:\Users\Kim\Folder2\SubFolder1\doNotRemoveDir
+    [tgt] C:\Users\Kim\Folder2\SubFolder1\DoNotRemove1.gp7
+    [tgt] C:\Users\Kim\Folder2\DoNotRemove2.doc
 #>
 
 [CmdletBinding()]
@@ -219,8 +233,40 @@ function Compare-Folders {
         [Parameter(Mandatory,Position=0)]
         [String]$src_folder,
         [Parameter(Mandatory,Position=1)]
-        [String]$tgt_folder
+        [String]$tgt_folder,
+        [Parameter(Mandatory=$false,Position=2)]
+        [Array]$src_exclusions_array,
+        [Parameter(Mandatory=$false,Position=3)]
+        [Array]$tgt_exclusions_array
     )
+
+    function Get-Difference {
+        <#
+        Utility function to compare objects and exclude files if necessary (mainly here to stay DRY)
+        #>
+        param(
+            [Parameter(Mandatory=$true)]
+            [bool]$exclude
+        )
+        if($exclude -eq $false) {
+            # Get elements
+            $objects = @{
+                ReferenceObject = (Get-ChildItem -Path $src_folder -Recurse)
+                DifferenceObject = (Get-ChildItem -Path $tgt_folder -Recurse)
+            }
+        }
+        elseif($exclude -eq $true) {
+            # Get elements but exclude files from exclusion arrays
+            $objects = @{
+                ReferenceObject = (Get-ChildItem -Path $src_folder -Recurse | Where-Object FullName -NotIn $src_exclusions_array)
+                DifferenceObject = (Get-ChildItem -Path $tgt_folder -Recurse | Where-Object FullName -NotIn $tgt_exclusions_array)
+            }
+        }
+        
+        # Compare folders
+        return  Compare-Object @objects
+    }
+
     # First check if given paths exists
     if(!(Test-Path $src_folder)) {
         Write-Log "{ERROR}(Compare-Folders) Source folder was not found ! Given path : '$($src_folder)'"
@@ -244,14 +290,13 @@ function Compare-Folders {
         Exit
     }
 
-    # Get elements
-    $objects = @{
-        ReferenceObject = (Get-ChildItem -Path $src_folder -Recurse)
-        DifferenceObject = (Get-ChildItem -Path $tgt_folder -Recurse)
-      }
-
-    # Compare folders
-    $folder_diff = Compare-Object @objects
+    if(!($src_exclusions_array -eq $null) -and !($tgt_exclusions_array -eq $null)) {
+        Write-log "{DEBUG} There are exclusions arrays for source and target."
+        $folder_diff = Get-Difference $true
+    } else {
+        Write-log "{DEBUG} There are no exclusions arrays for source and target."
+        $folder_diff = Get-Difference $false
+    }
 
     # Exit script if folders are already in sync
     if ($folder_diff -eq $null) {
@@ -386,7 +431,7 @@ $comparison | foreach {
 }
 
 # ====== LAST CHECKS ====== #
-Compare-Folders $source_folder $target_folder
+Compare-Folders $source_folder $target_folder $source_exclusions $target_exclusions
 
 if (!($Test -eq "")) {
     Prompt-Clean # FOR TESTING

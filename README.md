@@ -1,6 +1,6 @@
 # SyncMyFolder
 
-PowerShell script to synchronize two folders in mirror.
+PowerShell script to sync two directories in mirror. It also accept an exclusion list to exclude specific folders (and it's content) or files from source or target directory.
 
 ## Usage
 
@@ -8,6 +8,33 @@ To sync in mirror `Folder1` with `Folder2` simply do :
 
 ```console
 .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2
+```
+
+To sync in mirror Folder1 (source) but exclude from sync some files/folder from source or target :
+
+```console
+.\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2 -f myExclusions.txt
+```
+
+### Exclusion list
+
+'myExclusions.txt' file (can be named differently) will contain files or folders that should be excluded from sync. It work with source or target folder. 
+
+Each entry should have this syntax :
+
+```txt
+[<src/tgt>] <path> like this :
+```
+
+It would look like this :
+
+```txt
+[src] C:\Users\Kim\Folder1\SubFolder1\doNotSyncDir
+[src] C:\Users\Kim\Folder1\SubFolder1\doNotSync1.png
+[src] C:\Users\Kim\Folder1\doNotSync2.jpg
+[tgt] C:\Users\Kim\Folder2\SubFolder1\doNotRemoveDir
+[tgt] C:\Users\Kim\Folder2\SubFolder1\DoNotRemove1.gp7
+[tgt] C:\Users\Kim\Folder2\DoNotRemove2.doc
 ```
 
 ## Testing

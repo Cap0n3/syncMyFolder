@@ -1,6 +1,0 @@
-[src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder1\SubFolder1\doNotSyncDir
-[src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder1\SubFolder1\doNotSync1.png
-[src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder1\doNotSync2.jpg
-[tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder2\SubFolder1\doNotRemoveDir
-[tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder2\SubFolder1\DoNotRemove1.gp7
-[tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder2\DoNotRemove2.doc
