@@ -1,9 +1,10 @@
 <#
 .SYNOPSIS
-    This PowerShell script syncs two folders. Created by Cap0n3.
+    This PowerShell script syncs two folders (source, target). Created by Cap0n3.
 
 .DESCRIPTION
-    Script to sync two folders in mirror.
+    Script to sync two directories in mirror. It also accept an exclusion list to exclude specific folders (and it's content) 
+    or files from source or target directory.
 
 .NOTES
     For testing simply add flag `-Test <testFolder>` to command, for example to test folder 2 :
@@ -21,18 +22,37 @@
       if everything is ok, enter 'Y'.
 
 .EXAMPLE
-    To sync in mirror Folder1 do :
+    To sync in mirror Folder1 (source) with Folder2 (target) do :
     .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2
+
+.EXAMPLE
+    To sync in mirror Folder1 (source) but exclude from sync some files/folder from source or target :
+    .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2 -f myExclusion.txt
+
+    The file "myExclusion.txt" (can be named differently) should have this formating [<src/tgt>] <path> like this :
+
+    [src] C:\Users\Kim\Folder1\SubFolder1\doNotSyncDir
+    [src] C:\Users\Kim\Folder1\SubFolder1\doNotSync1.png
+    [src] C:\Users\Kim\Folder1\doNotSync2.jpg
+    [tgt] C:\Users\Kim\Folder2\SubFolder1\doNotRemoveDir
+    [tgt] C:\Users\Kim\Folder2\SubFolder1\DoNotRemove1.gp7
+    [tgt] C:\Users\Kim\Folder2\DoNotRemove2.doc
 #>
 
 [CmdletBinding()]
 Param(
     [Parameter(Mandatory, Position=0)]
-    [String]$folderpath1,
+    [String]$source_folder,
     [Parameter(Mandatory, Position=1)]
-    [String]$folderpath2,
+    [String]$target_folder,
     [Parameter(Mandatory=$false, Position=2)]
+<<<<<<< HEAD
     [String]$Test
+=======
+    [String]$Test,
+    [Parameter(Mandatory=$false)]
+    [alias("f")][String]$exceptions_file
+>>>>>>> develop
 )
 
 # ================================ #
@@ -48,8 +68,8 @@ $global:script_time = (Get-Date).toString("yyMMdd_HHmmss")
 # Change Source & Target Folder for testing
 if (!($Test -eq "")) {
     Write-Host "`n[TEST] Testing enabled for folder '$Test'" -ForegroundColor Cyan
-    $global:folderpath1 = "$currentdir\tests\$Test\Folder1"
-    $global:folderpath2 = "$currentdir\tests\$Test\Folder2"
+    $global:source_folder = "$currentdir\tests\$Test\Folder1"
+    $global:target_folder = "$currentdir\tests\$Test\Folder2"
 }
 
 # Create logs folder (if it doesn't exist)
@@ -121,50 +141,78 @@ function Prompt-Clean {
     }
 }
 
-function Create-ExceptArrays {
+function Create-ExclusionArrays {
     <#
     .SYNOPSIS
-        To create exception arrays for source & target folder.
+        To create exclusion arrays for source & target folder (files or folders to exclude).
 
     .DESCRIPTION
-        This function returns two arrays with files that shouldn't be synced from source or removed from target folder.
+        This function returns two arrays with files/folders that shouldn't be synced from source or removed from target folder.
 
     .PARAMETER  $except_file
-        User defined file containing exceptions for source and target folder.
+        User defined file containing exclusions for source and target folder.
     
     .OUTPUTS
-        Returns two arrays of exceptions, one with file names for source & another for target.
+        Returns two arrays of exclusions, one with file names for source & another for target.
     #>
     param(
         [Parameter(Mandatory)]
         [String]$except_file
     )
     #Prepare arrays to store exceptions
-    $src_exceptions = @()
-    $tgt_exceptions = @()
+    $src_exclusions = @()
+    $tgt_exclusions = @()
     # Get content of file
     $file_data = Get-Content $except_file
     # Read file content & populate arrays
     $file_data | ForEach-Object {
         # Exception for source or target folder ?
-        $which_exception =  $PSItem.SubString(0, 5)
+        $which_exclusion =  $PSItem.SubString(0, 5)
         # Start at 6 to avoid selecting space char
-        $file_path = $PSItem.SubString(6)
+        $item_path = $PSItem.SubString(6)
         # Test if path exists
-        if(!(Test-Path $file_path)){
-            Write-Log "{ERROR}(Create-ExceptArrays) Path in file '$($except_file)' was not found ! Given path : '$($file_path)'"
-            throw "Path in file '$($except_file)' was not found ! Check path : '$($file_path)'"
+        if(!(Test-Path $item_path)){
+            Write-Log "{ERROR}(Create-ExclusionArrays) Path in file '$($except_file)' was not found ! Given path : '$($item_path)'"
+            throw "(Create-ExclusionArrays) Path in file '$($except_file)' was not found ! Check path : '$($item_path)'"
         }
-        if($which_exception -eq "[src]"){
-            $src_exceptions+=$file_path
+        if($which_exclusion -eq "[src]"){
+            # Check if item path point to a file or a folder
+            if(Test-Path -Path $item_path -PathType Container) {
+                # If it's a folder, first store folder in exclusion array
+                $src_exclusions+=$item_path
+                # Then, get all its children
+                $subItems = Get-ChildItem -Path $item_path -Recurse
+                # And store all content in source exclusion array
+                $subItems | ForEach-Object {
+                    $src_exclusions+=$_.FullName
+                }
+            }
+            else {
+                # Else if it's a file, simple add it to exclusion array
+                $src_exclusions+=$item_path
+            }
+            
         }
-        elseif ($which_exception -eq "[tgt]") {
-            $tgt_exceptions+=$file_path
+        elseif ($which_exclusion -eq "[tgt]") {
+            if(Test-Path -Path $item_path -PathType Container) {
+                # If it's a folder, first store folder in exclusion array
+                $tgt_exclusions+=$item_path
+                # Then, get all its children
+                $subItems = Get-ChildItem -Path $item_path -Recurse
+                # And store all content in source exclusion array
+                $subItems | ForEach-Object {
+                    $tgt_exclusions+=$_.FullName
+                }
+            }
+            else {
+                # Else if it's a file, simple add it to exclusion array
+                $tgt_exclusions+=$item_path
+            }
         }
     }
-    Write-Log "{INFO}(Create-ExceptArrays) Exceptions for source folder : $($src_exceptions)"
-    Write-Log "{INFO}(Create-ExceptArrays) Exceptions for target folder : $($tgt_exceptions)"
-    return $src_exceptions, $tgt_exceptions
+    Write-Log "{INFO}(Create-ExclusionArrays) Exclusions for source folder : $($src_exclusions)"
+    Write-Log "{INFO}(Create-ExclusionArrays) Exclusions for target folder : $($tgt_exclusions)"
+    return $src_exclusions, $tgt_exclusions
 }
 
 function Compare-Folders {
@@ -189,39 +237,70 @@ function Compare-Folders {
         [Parameter(Mandatory,Position=0)]
         [String]$src_folder,
         [Parameter(Mandatory,Position=1)]
-        [String]$tgt_folder
+        [String]$tgt_folder,
+        [Parameter(Mandatory=$false,Position=2)]
+        [Array]$src_exclusions_array,
+        [Parameter(Mandatory=$false,Position=3)]
+        [Array]$tgt_exclusions_array
     )
+
+    function Get-Difference {
+        <#
+        Utility function to compare objects and exclude files if necessary (mainly here to stay DRY)
+        #>
+        param(
+            [Parameter(Mandatory=$true)]
+            [bool]$exclude
+        )
+        if($exclude -eq $false) {
+            # Get elements
+            $objects = @{
+                ReferenceObject = (Get-ChildItem -Path $src_folder -Recurse)
+                DifferenceObject = (Get-ChildItem -Path $tgt_folder -Recurse)
+            }
+        }
+        elseif($exclude -eq $true) {
+            # Get elements but exclude files from exclusion arrays
+            $objects = @{
+                ReferenceObject = (Get-ChildItem -Path $src_folder -Recurse | Where-Object FullName -NotIn $src_exclusions_array)
+                DifferenceObject = (Get-ChildItem -Path $tgt_folder -Recurse | Where-Object FullName -NotIn $tgt_exclusions_array)
+            }
+        }
+        
+        # Compare folders
+        return  Compare-Object @objects
+    }
+
     # First check if given paths exists
     if(!(Test-Path $src_folder)) {
         Write-Log "{ERROR}(Compare-Folders) Source folder was not found ! Given path : '$($src_folder)'"
-        throw "Source folder was not found ! Check path : '$($src_folder)'"
+        throw "(Compare-Folders) Source folder was not found ! Check path : '$($src_folder)'"
         Exit
     }
     if(!(Test-Path $tgt_folder)) {
         Write-Log "{ERROR}(Compare-Folders) Target folder was not found ! Given path : '$($tgt_folder)'"
-        throw "Target folder was not found ! Check path : '$($tgt_folder)'"
+        throw "(Compare-Folders) Target folder was not found ! Check path : '$($tgt_folder)'"
         Exit
     }
     # Then if given path are folders
     if(!((Get-Item $src_folder) -is [System.IO.DirectoryInfo])) {
         Write-Log "{ERROR}(Compare-Folders) Given source folder is not a folder ! Given path : '$($src_folder)'"
-        throw "Given source folder is not a folder ! Check path : '$($src_folder)'"
+        throw "(Compare-Folders) Given source folder is not a folder ! Check path : '$($src_folder)'"
         Exit
     }
     if(!((Get-Item $tgt_folder) -is [System.IO.DirectoryInfo])) {
         Write-Log "{ERROR}(Compare-Folders) Given target folder is not a folder ! Given path : '$($tgt_folder)'"
-        throw "Given target folder is not a folder ! Check path : '$($tgt_folder)'"
+        throw "(Compare-Folders) Given target folder is not a folder ! Check path : '$($tgt_folder)'"
         Exit
     }
 
-    # Get elements
-    $objects = @{
-        ReferenceObject = (Get-ChildItem -Path $src_folder -Recurse)
-        DifferenceObject = (Get-ChildItem -Path $tgt_folder -Recurse)
-      }
-
-    # Compare folders
-    $folder_diff = Compare-Object @objects
+    if(!($src_exclusions_array -eq $null) -and !($tgt_exclusions_array -eq $null)) {
+        Write-log "{DEBUG} There are exclusions arrays for source and target."
+        $folder_diff = Get-Difference $true
+    } else {
+        Write-log "{DEBUG} There are no exclusions arrays for source and target."
+        $folder_diff = Get-Difference $false
+    }
 
     # Exit script if folders are already in sync
     if ($folder_diff -eq $null) {
@@ -275,8 +354,8 @@ function Split-FullPath {
         [Parameter(Mandatory,Position=1)]
         [String]$folder_abs_path
     )
-    Write-Log "{DEBUG}(Split-FullPath) Path to split : $path_to_split" 
-    Write-Log "{DEBUG}(Split-FullPath) Absolute path to folder : $folder_abs_path"
+    Write-Log "{DEBUG}(Split-FullPath) Path to split : '$path_to_split'" 
+    Write-Log "{DEBUG}(Split-FullPath) Absolute path to folder : '$folder_abs_path'"
     $result = @()
     # Split first part of path (source or target) and second (file relative path)
     # Out-null to avoid placing boolean in result array
@@ -292,9 +371,19 @@ function Split-FullPath {
 # ============================== #
 # ============ SYNC ============ #
 # ============================== #
+<<<<<<< HEAD
+=======
+
+# Create exclusion arrays for source and target
+if(!($exceptions_file -eq "")){
+    $source_exclusions = @()
+    $target_exclusions = @()
+    $source_exclusions, $target_exclusions = Create-ExclusionArrays $exceptions_file
+}
+>>>>>>> develop
 
 # Compare source & target folders
-$comparison = Compare-Folders $folderpath1 $folderpath2
+$comparison = Compare-Folders $source_folder $target_folder
 
 # === Start sync === #
 Write-Log "====== START SYNC ======"
@@ -307,15 +396,21 @@ $comparison | foreach {
         try {
             # COPY FILE/FOLDER TO TARGET FOLDER
             # Get second only second part of path (file/folder relative path)
-            $path_split = Split-FullPath $item_path $folderpath1
+            $path_split = Split-FullPath $item_path $source_folder
             <# 
             Update target folder absolute path with relative path to file/folder to respect tree structure.
             Allow to recreate path, for instance "C:\Users\Kim\Source\Subfolder1\myVids\myVid.mov" would be 
             transformed to "C:\Users\Kim\Target\Subfolder1\myVids\myVid.mov"
             #>
-            $updated_path = $folderpath2 + $path_split[1]
-            Write-Log "{INFO} COPYING '$($item_path)' IN FOLDER '$($updated_path)'"
-            Copy-Item -Path $item_path -Destination $updated_path -Recurse
+            $updated_path = $target_folder + $path_split[1]
+            # Check if item is in exclusion list (don't copy if it is)
+            if (!($item_path -in $source_exclusions)){
+                Write-Log "{INFO} COPYING '$($item_path)' IN FOLDER '$($updated_path)'"
+                Copy-Item -Path $item_path -Destination $updated_path -Recurse
+            } else {
+                # If it is then log it
+                Write-Log "{INFO} Exclude following file/folder from sync : '$($item_path)'"
+            }
         }
         catch {
             Write-Log "{ERROR} An error occured !"
@@ -326,11 +421,14 @@ $comparison | foreach {
         # === Then file is only in TARGET folder === #
         try {
             # Remove file from target folder
-            Write-Log "{INFO} REMOVING '$($item_path)' IN FOLDER '$($folderpath2)'"
-            Remove-Item -Path $item_path -Recurse   
+            # Check if item is in exclusion list (don't remove if it is)
+            if (!($item_path -in $target_exclusions)){
+                Write-Log "{INFO} REMOVING '$($item_path)' IN FOLDER '$($target_folder)'"
+                Remove-Item -Path $item_path -Recurse
+            } 
         } 
         catch [System.Management.Automation.ItemNotFoundException] {
-            Write-Log "{WARNING} File not found : '$($item_path)'"
+            Write-Log "{WARNING} File not found (check if file parent folder has already been erased) : '$($item_path)'"
         }
         catch {
             Write-Log "{ERROR} An error occured !"
@@ -340,7 +438,7 @@ $comparison | foreach {
 }
 
 # ====== LAST CHECKS ====== #
-Compare-Folders $folderpath1 $folderpath2
+Compare-Folders $source_folder $target_folder $source_exclusions $target_exclusions
 
 if (!($Test -eq "")) {
     Prompt-Clean # FOR TESTING
