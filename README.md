@@ -18,7 +18,7 @@ To sync in mirror Folder1 (source) but exclude from sync some files/folder from 
 
 ### Exclusion list
 
-'myExclusions.txt' file (can be named differently) will contain files or folders that should be excluded from sync. It work with source or target folder. 
+`myExclusions.txt` file (can be named differently) will contain files or folders that should be excluded from sync. It works for source or target folder.
 
 Each entry should have this syntax :
 
