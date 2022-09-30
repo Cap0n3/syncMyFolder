@@ -336,6 +336,7 @@ $comparison | foreach {
             Write-Log "{ERROR} Error type : $_"
         }
     }
+}
 
 # ====== LAST CHECKS ====== #
 Compare-Folders $folderpath1 $folderpath2
