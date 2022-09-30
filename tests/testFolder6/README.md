@@ -4,21 +4,21 @@ A `target folder` with different files and folders in it BUT ONE folder AND a fi
 
 - `doNotSync1.png` (Source folder)
 - `doNotSync2.jpg` (Source folder)
-- `DoNotRemove1.gp7` (Target folder)
-- `DoNotRemove2.doc` (Target folder)
+- `doNotRemove1.gp7` (Target folder)
+- `doNotRemove2.doc` (Target folder)
 
-> **Note :** Don't forget to create an exception file with script flag `-f <FileName>` and format file with correct syntax, it should look like this :
+> **Note :** Don't forget to create an exclusion file with script flag `-f <FileName>` and format file with correct syntax, it should look like this :
 >
 > ```txt
-> [src] SubFolder1/doNotSync1.png
-> [src] doNotSync2.jpg
-> [tgt] SubFolder1/DoNotRemove1.gp7
-> [tgt] DoNotRemove2.doc
+> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder6\Folder1\SubFolder1\doNotSync1.png
+> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder6\Folder1\doNotSync2.jpg
+> [tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder6\Folder2\SubFolder1\DoNotRemove1.gp7
+> [tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder6\Folder2\DoNotRemove2.doc
 > ```
 
 ## Goal
 
-1. Remove files `ToRemove.jpg`, `ToRemoveSub1.rtf` AND folder `Folder2/SubFolder2` to match `source folder` (Folder1) content.
+1. Remove files `ToRemove2.jpg`, `ToRemoveSub1.rtf` AND folder `Folder2/SubFolder2` to match `source folder` (Folder1) content.
 2. Files in exception file shouln't be synced from `source folder` or removed from `target folder`.
 
 ## Structure
@@ -51,10 +51,8 @@ Folder1/
 ├─ myText1.txt
 Folder2/
 ├─ SubFolder1/
-│  ├─ doNotSync1.png
 │  ├─ mySubText1.txt
 │  ├─ doNotRemove1.gp7
 ├─ doNotRemove2.doc
-├─ doNotSync2.jpg
 ├─ myImg1.jpg
 ├─ myText1.txt
