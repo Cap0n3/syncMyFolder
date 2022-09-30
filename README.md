@@ -51,8 +51,7 @@ For testing simply add flag `-Test <testFolder>` to command, for example to test
 .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2 -Test testFolder2
 ```
 
-If you wish, you can create new test folders with custom structure for testing, just name new folders 'testFolder7', 
-'testFolder8', etc ... and create a `.zip` backup placed in folder `0_backup_zip/` (used to restore original structure of test folder).
+If you wish, you can create new test folders with custom structure for testing, just name new folders 'testFolder7', 'testFolder8', etc ... and create a `.zip` backup placed in folder `0_backup_zip/` (used to restore original structure of test folder).
 
 Run Script with test flag and either :
 
