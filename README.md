@@ -4,6 +4,12 @@ PowerShell script to sync two directories in mirror. It also accept an exclusion
 
 ## Usage
 
+Set execution policy :
+
+```ps1
+Set-ExecutionPolicy RemoteSigned
+```
+
 To sync in mirror `Folder1` with `Folder2` simply do :
 
 ```console
