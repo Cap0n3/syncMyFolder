@@ -367,8 +367,6 @@ function Split-FullPath {
 # ============================== #
 # ============ SYNC ============ #
 # ============================== #
-<<<<<<< HEAD
-=======
 
 # Create exclusion arrays for source and target
 if(!($exceptions_file -eq "")){
@@ -376,7 +374,6 @@ if(!($exceptions_file -eq "")){
     $target_exclusions = @()
     $source_exclusions, $target_exclusions = Create-ExclusionArrays $exceptions_file
 }
->>>>>>> develop
 
 # Compare source & target folders
 $comparison = Compare-Folders $source_folder $target_folder
