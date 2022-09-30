@@ -149,19 +149,47 @@ function Create-ExclusionArrays {
     # Read file content & populate arrays
     $file_data | ForEach-Object {
         # Exception for source or target folder ?
-        $which_exception =  $PSItem.SubString(0, 5)
+        $which_exclusion =  $PSItem.SubString(0, 5)
         # Start at 6 to avoid selecting space char
-        $file_path = $PSItem.SubString(6)
+        $item_path = $PSItem.SubString(6)
         # Test if path exists
-        if(!(Test-Path $file_path)){
-            Write-Log "{ERROR}(Create-ExclusionArrays) Path in file '$($except_file)' was not found ! Given path : '$($file_path)'"
-            throw "(Create-ExclusionArrays) Path in file '$($except_file)' was not found ! Check path : '$($file_path)'"
+        if(!(Test-Path $item_path)){
+            Write-Log "{ERROR}(Create-ExclusionArrays) Path in file '$($except_file)' was not found ! Given path : '$($item_path)'"
+            throw "(Create-ExclusionArrays) Path in file '$($except_file)' was not found ! Check path : '$($item_path)'"
         }
-        if($which_exception -eq "[src]"){
-            $src_exclusions+=$file_path
+        if($which_exclusion -eq "[src]"){
+            # Check if item path point to a file or a folder
+            if(Test-Path -Path $item_path -PathType Container) {
+                # If it's a folder, first store folder in exclusion array
+                $src_exclusions+=$item_path
+                # Then, get all its children
+                $subItems = Get-ChildItem -Path $item_path -Recurse
+                # And store all content in source exclusion array
+                $subItems | ForEach-Object {
+                    $src_exclusions+=$_.FullName
+                }
+            }
+            else {
+                # Else if it's a file, simple add it to exclusion array
+                $src_exclusions+=$item_path
+            }
+            
         }
-        elseif ($which_exception -eq "[tgt]") {
-            $tgt_exclusions+=$file_path
+        elseif ($which_exclusion -eq "[tgt]") {
+            if(Test-Path -Path $item_path -PathType Container) {
+                # If it's a folder, first store folder in exclusion array
+                $tgt_exclusions+=$item_path
+                # Then, get all its children
+                $subItems = Get-ChildItem -Path $item_path -Recurse
+                # And store all content in source exclusion array
+                $subItems | ForEach-Object {
+                    $tgt_exclusions+=$_.FullName
+                }
+            }
+            else {
+                # Else if it's a file, simple add it to exclusion array
+                $tgt_exclusions+=$item_path
+            }
         }
     }
     Write-Log "{INFO}(Create-ExclusionArrays) Exclusions for source folder : $($src_exclusions)"
@@ -277,8 +305,8 @@ function Split-FullPath {
         [Parameter(Mandatory,Position=1)]
         [String]$folder_abs_path
     )
-    Write-Log "{DEBUG}(Split-FullPath) Path to split : $path_to_split" 
-    Write-Log "{DEBUG}(Split-FullPath) Absolute path to folder : $folder_abs_path"
+    Write-Log "{DEBUG}(Split-FullPath) Path to split : '$path_to_split'" 
+    Write-Log "{DEBUG}(Split-FullPath) Absolute path to folder : '$folder_abs_path'"
     $result = @()
     # Split first part of path (source or target) and second (file relative path)
     # Out-null to avoid placing boolean in result array
@@ -327,6 +355,9 @@ $comparison | foreach {
             if (!($item_path -in $source_exclusions)){
                 Write-Log "{INFO} COPYING '$($item_path)' IN FOLDER '$($updated_path)'"
                 Copy-Item -Path $item_path -Destination $updated_path -Recurse
+            } else {
+                # If it is then log it
+                Write-Log "{INFO} Exclude following file/folder from sync : '$($item_path)'"
             }
         }
         catch {
@@ -345,7 +376,7 @@ $comparison | foreach {
             } 
         } 
         catch [System.Management.Automation.ItemNotFoundException] {
-            Write-Log "{WARNING} File not found : '$($item_path)'"
+            Write-Log "{WARNING} File not found (check if file parent folder has already been erased) : '$($item_path)'"
         }
         catch {
             Write-Log "{ERROR} An error occured !"
