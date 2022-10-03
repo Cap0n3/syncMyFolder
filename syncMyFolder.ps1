@@ -73,6 +73,15 @@ if (!(Test-Path "$currentdir\logs" -PathType Container)) {
     New-Item -ItemType Directory -Force -Path "$currentdir\logs"
 }
 
+# Count .log files in logs folder
+$log_count = (Get-ChildItem -Path "$currentdir\logs" -Filter *.log | Measure-Object).Count
+
+if($log_count -gt 6){
+    Write-Host "YEEEP" -ForegroundColor red
+}
+
+Exit
+
 # === ERROR SET-UP === #
 # Treat all errors as terminating errors
 $ErrorActionPreference = "STOP"
