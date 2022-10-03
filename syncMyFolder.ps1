@@ -68,19 +68,49 @@ if (!($Test -eq "")) {
     $global:target_folder = "$currentdir\tests\$Test\Folder2"
 }
 
+# === LOG UTILITY SET-UP === #
+$MAX_LOGS = 30
+$MAX_ARCHIVE = 100
+
 # Create logs folder (if it doesn't exist)
 if (!(Test-Path "$currentdir\logs" -PathType Container)) {
-    New-Item -ItemType Directory -Force -Path "$currentdir\logs"
+    New-Item -ItemType Directory -Force -Path "$currentdir\logs" | Out-null
 }
 
 # Count .log files in logs folder
 $log_count = (Get-ChildItem -Path "$currentdir\logs" -Filter *.log | Measure-Object).Count
 
-if($log_count -gt 6){
-    Write-Host "YEEEP" -ForegroundColor red
+# Create a .zip file if there's too many log files in log folder
+if($log_count -gt ($MAX_LOGS)){
+    # Create directory for archives (if it doesn't exist)
+    if (!(Test-Path "$currentdir\logs\log-archives" -PathType Container)) {
+        New-Item -ItemType Directory -Force -Path "$currentdir\logs\log-archives" | Out-null
+    }
+    # Get all log files
+    $log_files = Get-ChildItem -Path "$currentdir\logs" -Filter *.log
+    # Get time stamps of first and last log files (to create archive name)
+    $startEndFile = $log_files[0].toString() + $log_files[-1].toString()
+    $log_files[0].toString() -match '\{\d+_\d+\}' | Out-null
+    $startFileStamp = $Matches[0]
+    $log_files[-1].toString() -match '\{\d+_\d+\}' | Out-null
+    $endFileStamp = $Matches[0]
+    # Compress files
+    $log_files | Compress-Archive -DestinationPath "$currentdir\logs\log-archives\$($startFileStamp)-$($endFileStamp).zip"
+    # Remove log files
+    $log_files | ForEach-Object {
+        Remove-Item "$currentdir\logs\$($PSItem)"
+    }
+    # === Clean log-archive (to avoid cluttering) === #
+    # Count .zip files in dir 
+    $zip_count = (Get-ChildItem -Path "$currentdir\logs\log-archives" -Filter *.zip | Measure-Object).Count
+    # Remove first n zip files
+    if ($zip_count -gt ($MAX_ARCHIVE)){
+        $zip_files = Get-ChildItem -Path "$currentdir\logs\log-archives" -Filter *.zip
+        for ($i = 0; $i -lt $($MAX_ARCHIVE / 2); $i++){
+            Remove-Item "$currentdir\logs\log-archives\$($zip_files[$i])"
+        }
+    }
 }
-
-Exit
 
 # === ERROR SET-UP === #
 # Treat all errors as terminating errors
