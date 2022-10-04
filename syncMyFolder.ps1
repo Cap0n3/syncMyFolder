@@ -71,12 +71,6 @@ if (!($Test -eq "")) {
     $global:target_folder = "$currentdir\tests\$Test\Folder2"
 }
 
-# Check if target folder is empty
-if((Get-ChildItem -Path $target_folder | Measure-Object).Count -eq 0) {
-    # If it is then copy all source content in target folder
-    Copy-Item -Path "$($source_folder)/*" -Destination $target_folder -Recurse
-}
-
 # === LOG ROTATION SET-UP === #
 $MAX_LOGS = 30 # Max log files permitted in log dir
 $MAX_ARCHIVE = 100 # Max zip archives permitted in archive dir
@@ -415,6 +409,13 @@ function Split-FullPath {
 # ============================== #
 # ============ SYNC ============ #
 # ============================== #
+
+# Check if target folder is empty
+if((Get-ChildItem -Path $target_folder | Measure-Object).Count -eq 0) {
+    # If it is, then copy all source content in target folder
+    Write-Log "Target directory is empty, copying content of '$($source_folder)' in '$($target_folder)'"
+    Copy-Item -Path "$($source_folder)/*" -Destination $target_folder -Recurse
+}
 
 # Create exclusion arrays for source and target
 if(!($exceptions_file -eq "")){
