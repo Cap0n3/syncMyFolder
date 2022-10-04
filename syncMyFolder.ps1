@@ -42,13 +42,16 @@
 [CmdletBinding()]
 Param(
     [Parameter(Mandatory, Position=0)]
+    [alias("Source")]
     [String]$source_folder,
     [Parameter(Mandatory, Position=1)]
+    [alias("Target")]
     [String]$target_folder,
     [Parameter(Mandatory=$false, Position=2)]
     [String]$Test,
     [Parameter(Mandatory=$false)]
-    [alias("f")][String]$exceptions_file
+    [alias("f")]
+    [String]$exceptions_file
 )
 
 # ================================ #
@@ -66,6 +69,12 @@ if (!($Test -eq "")) {
     Write-Host "`n[TEST] Testing enabled for folder '$Test'" -ForegroundColor Cyan
     $global:source_folder = "$currentdir\tests\$Test\Folder1"
     $global:target_folder = "$currentdir\tests\$Test\Folder2"
+}
+
+# Check if target folder is empty
+if((Get-ChildItem -Path $target_folder | Measure-Object).Count -eq 0) {
+    # If it is then copy all source content in target folder
+    Copy-Item -Path "$($source_folder)/*" -Destination $target_folder -Recurse
 }
 
 # === LOG ROTATION SET-UP === #
