@@ -53,9 +53,9 @@ For testing simply add flag `-Test <testFolder>` to command, for example to test
 .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2 -Test testFolder2
 ```
 
-There's already a few tests provided but, if you wish, you can create new test folders with custom structure for testing. The parent folder should be named 'testFolder8', 'testFolder9', etc ... Then you must create a `.zip` backup of the test folder placed in directory `0_backup_zip/`, it's used to restore original structure of test folder after the test synchronization.
+There's already a few tests provided but if you wish, you can create new test folders with a custom structure for testing. Parent folder should be named 'testFolder8', 'testFolder9', etc ... Once created, you must create a `.zip` backup of the test folder placed in `0_backup_zip/`  directory, archive will used to restore original structure of test folder after the test synchronization.
 
-Run Script with test flag and either :
+Run Script with test flag and then either :
 
 - Say no `N` when prompted to check if testFolders content fits expected results. Then, run script again and say yes `Y` when prompted to re-initialize testFolders to original structure.
 - Don't do anything, check if testFolders content fits expected results (Go to logs to see if folders are in sync or check console message) and if everything is ok, enter `Y` to restore test folder original structure.
