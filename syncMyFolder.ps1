@@ -69,8 +69,8 @@ if (!($Test -eq "")) {
 }
 
 # === LOG UTILITY SET-UP === #
-$MAX_LOGS = 30
-$MAX_ARCHIVE = 100
+$MAX_LOGS = 30 # Max log files permitted in log dir
+$MAX_ARCHIVE = 100 # Max zip archives permitted in archive dir
 
 # Create logs folder (if it doesn't exist)
 if (!(Test-Path "$currentdir\logs" -PathType Container)) {
@@ -122,9 +122,9 @@ $global:testfolderzip = "$currentdir\tests\0_backup_zip"
 # The test folder path
 $global:testfolder = "$currentdir\tests"
 
-# =============================== #
-# ============ UTILS ============ #
-# =============================== #
+# ===================================== #
+# ============ UTILS FUNCS ============ #
+# ===================================== #
 
 $logfile = "$currentdir\logs\{$($script_time)}_syncMyFolder.log"
 
@@ -470,6 +470,7 @@ $comparison | foreach {
 }
 
 # ====== LAST CHECKS ====== #
+# To see if source & target folders are in sync
 Compare-Folders $source_folder $target_folder $source_exclusions $target_exclusions
 
 if (!($Test -eq "")) {
