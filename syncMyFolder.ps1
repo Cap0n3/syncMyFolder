@@ -68,7 +68,7 @@ if (!($Test -eq "")) {
     $global:target_folder = "$currentdir\tests\$Test\Folder2"
 }
 
-# === LOG UTILITY SET-UP === #
+# === LOG ROTATION SET-UP === #
 $MAX_LOGS = 30 # Max log files permitted in log dir
 $MAX_ARCHIVE = 100 # Max zip archives permitted in archive dir
 
