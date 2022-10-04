@@ -2,7 +2,7 @@
 
 PowerShell script to sync two directories in mirror. It optionally accepts an exclusion list to exclude specific folders (and it's content) or files from source or target directory.
 
-> **Note :** Script has an integrated log facility to check if everything went as expected or not. To read log files go to `log/` directory or in log-archives/ for older logs (compressed).
+> **Note :** Script has an integrated log facility to check if everything went as expected or not. To read log files go to `log/` directory (will be created after first run) or in log-archives/ for older logs (compressed).
 
 ## Usage
 
