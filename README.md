@@ -1,6 +1,8 @@
 # SyncMyFolder
 
-PowerShell script to sync two directories in mirror. It also accept an exclusion list to exclude specific folders (and it's content) or files from source or target directory.
+PowerShell script to sync two directories in mirror. It optionally accepts an exclusion list to exclude specific folders (and it's content) or files from source or target directory.
+
+> **Note :** Script has an integrated log facility to check if everything went as expected or not. To read log files go to `log/` directory or in log-archives/ for older logs (compressed).
 
 ## Usage
 
@@ -10,21 +12,21 @@ Set execution policy :
 Set-ExecutionPolicy RemoteSigned
 ```
 
-To sync in mirror `Folder1` with `Folder2` simply do :
+For example, to mirror `Folder1` (source) in `Folder2` (target) simply do :
 
 ```console
 .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2
 ```
 
-To sync in mirror Folder1 (source) but exclude from sync some files/folder from source or target :
+### Exclusion list
+
+Now, to sync in mirror Folder1 (source) but exclude from sync some files/folder from source or target simply include exclusion file after the option `-f` :
 
 ```console
 .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2 -f myExclusions.txt
 ```
 
-### Exclusion list
-
-`myExclusions.txt` file (can be named differently) will contain files or folders that should be excluded from sync. It works for source or target folder.
+`myExclusions.txt` file (name and extension is up to you) will contain files or folders that should be excluded from sync. It works for source or target folder.
 
 Each entry should have this syntax :
 
@@ -32,7 +34,7 @@ Each entry should have this syntax :
 [<src/tgt>] <path> like this :
 ```
 
-It would look like this :
+So it would look something like this :
 
 ```txt
 [src] C:\Users\Kim\Folder1\SubFolder1\doNotSyncDir
@@ -51,9 +53,9 @@ For testing simply add flag `-Test <testFolder>` to command, for example to test
 .\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2 -Test testFolder2
 ```
 
-If you wish, you can create new test folders with custom structure for testing, just name new folders 'testFolder7', 'testFolder8', etc ... and create a `.zip` backup placed in folder `0_backup_zip/` (used to restore original structure of test folder).
+There's already a few tests provided but, if you wish, you can create new test folders with custom structure for testing. The parent folder should be named 'testFolder8', 'testFolder9', etc ... Then you must create a `.zip` backup of the test folder placed in directory `0_backup_zip/`, it's used to restore original structure of test folder after the test synchronization.
 
 Run Script with test flag and either :
 
-- Say 'No' when prompted to check if testFolders content fits expected results. Then, run script again and say 'Yes' when prompted to re-initialize testFolders to original structure.
-- Don't do anything, check if testFolders content fits expected results (Go to logs to see if folders are in sync) and if everything is ok, enter 'Y'.
+- Say no `N` when prompted to check if testFolders content fits expected results. Then, run script again and say yes `Y` when prompted to re-initialize testFolders to original structure.
+- Don't do anything, check if testFolders content fits expected results (Go to logs to see if folders are in sync or check console message) and if everything is ok, enter `Y` to restore test folder original structure.
