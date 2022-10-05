@@ -216,6 +216,7 @@ function Create-ExclusionArrays {
         if($which_exclusion -eq "[src]"){
             # Check if item path point to a file or a folder
             if(Test-Path -Path $item_path -PathType Container) {
+                Write-Log "{DEBUG}(Create-ExclusionArrays) adding in source exclusion folder '$($item_path)'"
                 # If it's a folder, first store folder in exclusion array
                 $src_exclusions+=$item_path
                 # Then, get all its children
@@ -225,14 +226,21 @@ function Create-ExclusionArrays {
                     $src_exclusions+=$_.FullName
                 }
             }
-            else {
-                # Else if it's a file, simple add it to exclusion array
+            elseif (Test-Path -Path $item_path -PathType leaf) {
+                # If it's a wildcard exclusion for a specific type of file
+                if($item_path -match '\*\.\w+'){
+                    $excludedExtensionFiles = Get-ChildItem "$($source_folder)\$($matches[0])" -Recurse
+                    Write-Log "{INFO}(Create-ExclusionArrays) Excluded files with extension '$($matches[0])' : '$($excludedExtensionFiles)'"
+                }
+                Write-Log "{DEBUG}(Create-ExclusionArrays) adding in source exclusion file '$($item_path)'"
+                # It's a file, simply add it to exclusion array
                 $src_exclusions+=$item_path
             }
             
         }
         elseif ($which_exclusion -eq "[tgt]") {
             if(Test-Path -Path $item_path -PathType Container) {
+                Write-Log "{DEBUG}(Create-ExclusionArrays) adding in source exclusion folder '$($item_path)'"
                 # If it's a folder, first store folder in exclusion array
                 $tgt_exclusions+=$item_path
                 # Then, get all its children
@@ -242,8 +250,9 @@ function Create-ExclusionArrays {
                     $tgt_exclusions+=$_.FullName
                 }
             }
-            else {
-                # Else if it's a file, simple add it to exclusion array
+            elseif (Test-Path -Path $item_path -PathType leaf) {
+                Write-Log "{DEBUG}(Create-ExclusionArrays) adding in source exclusion file '$($item_path)'"
+                # It's a file, simply add it to exclusion array
                 $tgt_exclusions+=$item_path
             }
         }
@@ -309,7 +318,7 @@ function Compare-Folders {
         return  Compare-Object @objects
     }
 
-    # First check if given paths exists
+    # First, check if given paths exists
     if(!(Test-Path $src_folder)) {
         Write-Log "{ERROR}(Compare-Folders) Source folder was not found ! Given path : '$($src_folder)'"
         throw "(Compare-Folders) Source folder was not found ! Check path : '$($src_folder)'"
@@ -320,7 +329,7 @@ function Compare-Folders {
         throw "(Compare-Folders) Target folder was not found ! Check path : '$($tgt_folder)'"
         Exit
     }
-    # Then if given path are folders
+    # Then, if given paths are folders
     if(!((Get-Item $src_folder) -is [System.IO.DirectoryInfo])) {
         Write-Log "{ERROR}(Compare-Folders) Given source folder is not a folder ! Given path : '$($src_folder)'"
         throw "(Compare-Folders) Given source folder is not a folder ! Check path : '$($src_folder)'"
@@ -331,7 +340,7 @@ function Compare-Folders {
         throw "(Compare-Folders) Given target folder is not a folder ! Check path : '$($tgt_folder)'"
         Exit
     }
-
+    # Check if there are exclusions
     if(!($src_exclusions_array -eq $null) -and !($tgt_exclusions_array -eq $null)) {
         Write-log "{DEBUG} There are exclusions arrays for source and target."
         $folder_diff = Get-Difference $true
