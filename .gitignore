@@ -5,6 +5,7 @@
 
 # == MISC == #
 exclude_test6.txt
+exclude_test7_alt.txt
 exclude_test7.txt
 /build
 /logs
