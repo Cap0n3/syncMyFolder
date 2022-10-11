@@ -28,6 +28,8 @@ Now, to sync in mirror Folder1 (source) but exclude from sync some files/folder 
 
 `myExclusions.txt` file (name and extension is up to you) will contain files or folders that should be excluded from sync. It works for source or target folder.
 
+> **Note :** for target folder it'll simply not erase excluded file even if it's only present in target folder and not source.
+
 Each entry should have this syntax :
 
 ```txt
@@ -43,6 +45,12 @@ So it would look something like this :
 [tgt] C:\Users\Kim\Folder2\SubFolder1\doNotRemoveDir
 [tgt] C:\Users\Kim\Folder2\SubFolder1\DoNotRemove1.gp7
 [tgt] C:\Users\Kim\Folder2\DoNotRemove2.doc
+```
+
+It's also possible to exclude a specific type of file from sync (works only for source folder) :
+
+```txt
+[src] *.txt
 ```
 
 ## Testing
