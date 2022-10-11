@@ -51,7 +51,7 @@ Param(
     [String]$Test,
     [Parameter(Mandatory=$false)]
     [alias("f")]
-    [String]$exceptions_file
+    [String]$exclusions
 )
 
 # ================================ #
@@ -101,7 +101,7 @@ if($log_count -gt ($MAX_LOGS)){
     $log_files | Compress-Archive -DestinationPath "$currentdir\logs\log-archives\$($startFileStamp)-$($endFileStamp).zip"
     # Remove log files
     $log_files | ForEach-Object {
-        Remove-Item "$currentdir\logs\$($PSItem)"
+        Remove-Item "$currentdir\logs\$($PSItem)" -Force
     }
     # === Clean log-archive (to avoid cluttering) === #
     # Count .zip files in dir 
@@ -148,7 +148,7 @@ function Clean-Tests {
     Foreach-Object {
         # If folder are named testFolder[1, 2, 3, ...] then remove
         if($_.Name -match 'testFolder\d') {
-            Remove-Item $_.FullName -Recurse
+            Remove-Item $_.FullName -Recurse -Force
             Write-Log "{TEST} Removing file '$($_.Name)'" 
         }
     }
@@ -187,7 +187,7 @@ function Create-ExclusionArrays {
     .DESCRIPTION
         This function returns two arrays with files/folders that shouldn't be synced from source or removed from target folder.
 
-    .PARAMETER  $except_file
+    .PARAMETER  $exclusionList_file
         User defined file containing exclusions for source and target folder.
     
     .OUTPUTS
@@ -195,13 +195,13 @@ function Create-ExclusionArrays {
     #>
     param(
         [Parameter(Mandatory)]
-        [String]$except_file
+        [String]$exclusionList_file
     )
     #Prepare arrays to store exceptions
     $src_exclusions = @()
     $tgt_exclusions = @()
-    # Get content of file
-    $file_data = Get-Content $except_file
+    # Get content of exclusion file
+    $file_data = Get-Content $exclusionList_file
     # Read file content & populate arrays
     $file_data | ForEach-Object {
         # Exception for source or target folder ?
@@ -210,8 +210,8 @@ function Create-ExclusionArrays {
         $excludedFile_path = $PSItem.SubString(6)
         # Test if path exists
         if(!(Test-Path $excludedFile_path)){
-            Write-Log "{ERROR}(Create-ExclusionArrays) Path in file '$($except_file)' was not found ! Given path : '$($excludedFile_path)'"
-            throw "(Create-ExclusionArrays) Path in file '$($except_file)' was not found ! Check path : '$($excludedFile_path)'"
+            Write-Log "{ERROR}(Create-ExclusionArrays) Path in file '$($exclusionList_file)' was not found ! Given path : '$($excludedFile_path)'"
+            throw "(Create-ExclusionArrays) Path in file '$($exclusionList_file)' was not found ! Check path : '$($excludedFile_path)'"
         }
         if($which_exclusion -eq "[src]"){
             # Check if item path point to a file or a folder
@@ -419,75 +419,106 @@ function Split-FullPath {
     return $result
 }
 
+function Copy-Content {
+    <#
+    .SYNOPSIS
+        Copy file or folder to destination.
+    
+    .DESCRIPTION
+        This utility function copy file to destination and take into account exclusions, it's been created to keep code DRY.
+
+    .PARAMETER fullPath
+        Full path to file/folder
+    
+    .PARAMETER _source_exclusions
+        Source exclusions.
+    #>
+    param(
+        [Parameter(Mandatory,Position=0)]
+        [String]$fullPath,
+        [Parameter(Mandatory,Position=1)]
+        [AllowNull()]
+        [Array]$_source_exclusions
+    )
+    # Test if path exists
+    if(!(Test-Path $fullPath)) {
+        Write-Log "{ERROR}(Copy-Content) Path was not found ! Given path : '$($fullPath)'"
+        throw "(Copy-Content) Path was not found ! Check path : '$($fullPath)'"
+        Exit
+    }
+    # Get second only second part of path (file/folder relative path)
+    $path_split = Split-FullPath $fullPath $source_folder
+    <# 
+    Update target folder absolute path with relative path to file/folder to respect tree structure.
+    Allow to recreate path, for instance "C:\Users\Kim\Source\Subfolder1\myVids\myVid.mov" would be 
+    transformed to "C:\Users\Kim\Target\Subfolder1\myVids\myVid.mov"
+    #>
+    $updated_path = $target_folder + $path_split[1]
+    if (!($fullPath -in $_source_exclusions)){
+        Write-Log "{INFO} COPYING '$($fullPath)' IN FOLDER '$($updated_path)'"
+        Copy-Item -Path $fullPath -Destination $updated_path -Recurse               
+    } else {
+        # If it is then log it
+        Write-Log "{INFO} Exclude following file/folder from sync : '$($fullPath)'"
+    }
+}
+
 # ============================== #
 # ============ SYNC ============ #
 # ============================== #
 
-# Check if target folder is empty
+# Create exclusion arrays for source and target if flag is indicated in command
+if(!($exclusions -eq "")){
+    $source_exclusions = @()
+    $target_exclusions = @()
+    $source_exclusions, $target_exclusions = Create-ExclusionArrays $exclusions
+}
+
+# Check if target folder is empty (First sync)
 if((Get-ChildItem -Path $target_folder | Measure-Object).Count -eq 0) {
     # If it is, then copy all source content in target folder
     Write-Log "Target directory is empty, copying content of '$($source_folder)' in '$($target_folder)'"
-    Copy-Item -Path "$($source_folder)/*" -Destination $target_folder -Recurse
-}
+    Get-ChildItem -Path $source_folder -Recurse | ForEach-Object {
+        Copy-Content $PSItem.FullName $source_exclusions
+    }
+} else {
+    # This is not the first sync, compare source/target folders to see differences
+    $comparison = Compare-Folders $source_folder $target_folder
 
-# Create exclusion arrays for source and target
-if(!($exceptions_file -eq "")){
-    $source_exclusions = @()
-    $target_exclusions = @()
-    $source_exclusions, $target_exclusions = Create-ExclusionArrays $exceptions_file
-}
+    # === Start sync === #
+    Write-Log "====== START SYNC ======"
+    $comparison | foreach {
+        # Get current item full path
+        $item_path = $_.InputObject.FullName
 
-# Compare source & target folders
-$comparison = Compare-Folders $source_folder $target_folder
-
-# === Start sync === #
-Write-Log "====== START SYNC ======"
-$comparison | foreach {
-    # Get current item full path
-    $item_path = $_.InputObject.FullName
-
-    if ($_.SideIndicator -eq "<=") {
-        # === Then file is only in SOURCE folder === #
-        try {
-            # COPY FILE/FOLDER TO TARGET FOLDER
-            # Get second only second part of path (file/folder relative path)
-            $path_split = Split-FullPath $item_path $source_folder
-            <# 
-            Update target folder absolute path with relative path to file/folder to respect tree structure.
-            Allow to recreate path, for instance "C:\Users\Kim\Source\Subfolder1\myVids\myVid.mov" would be 
-            transformed to "C:\Users\Kim\Target\Subfolder1\myVids\myVid.mov"
-            #>
-            $updated_path = $target_folder + $path_split[1]
-            # Check if item is in exclusion list (don't copy if it is)
-            if (!($item_path -in $source_exclusions)){
-                Write-Log "{INFO} COPYING '$($item_path)' IN FOLDER '$($updated_path)'"
-                Copy-Item -Path $item_path -Destination $updated_path -Recurse
-            } else {
-                # If it is then log it
-                Write-Log "{INFO} Exclude following file/folder from sync : '$($item_path)'"
+        if ($_.SideIndicator -eq "<=") {
+            # === Then file is only in SOURCE folder === #
+            try {
+                # COPY FILE/FOLDER TO TARGET FOLDER
+                Copy-Content $item_path $source_exclusions
+            }
+            catch {
+                Write-Log "{ERROR} An error occured !"
+                Write-Log "{ERROR} Error type : $_"
             }
         }
-        catch {
-            Write-Log "{ERROR} An error occured !"
-            Write-Log "{ERROR} Error type : $_"
-        }
-    }
-    elseif ($_.SideIndicator -eq "=>") {
-        # === Then file is only in TARGET folder === #
-        try {
-            # Remove file from target folder
-            # Check if item is in exclusion list (don't remove if it is)
-            if (!($item_path -in $target_exclusions)){
-                Write-Log "{INFO} REMOVING '$($item_path)' IN FOLDER '$($target_folder)'"
-                Remove-Item -Path $item_path -Recurse
+        elseif ($_.SideIndicator -eq "=>") {
+            # === Then file is only in TARGET folder === #
+            try {
+                # Remove file from target folder
+                # Check if item is in exclusion list (don't remove if it is)
+                if (!($item_path -in $target_exclusions)){
+                    Write-Log "{INFO} REMOVING '$($item_path)' IN FOLDER '$($target_folder)'"
+                    Remove-Item -Path $item_path -Recurse -Force
+                } 
             } 
-        } 
-        catch [System.Management.Automation.ItemNotFoundException] {
-            Write-Log "{WARNING} File not found (check if file parent folder has already been erased) : '$($item_path)'"
-        }
-        catch {
-            Write-Log "{ERROR} An error occured !"
-            Write-Log "{ERROR} Error type : $_"
+            catch [System.Management.Automation.ItemNotFoundException] {
+                Write-Log "{WARNING} File not found (check if file parent folder has already been erased) : '$($item_path)'"
+            }
+            catch {
+                Write-Log "{ERROR} An error occured !"
+                Write-Log "{ERROR} Error type : $_"
+            }
         }
     }
 }
