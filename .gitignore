@@ -4,9 +4,7 @@
 .history
 
 # == MISC == #
-exclude_test6.txt
-exclude_test7_alt.txt
-exclude_test7.txt
+exclude_*.txt
 /build
 /logs
 /tmp

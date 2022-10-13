@@ -239,8 +239,7 @@ function Create-ExclusionArrays {
                     # It's a file, simply add it to exclusion array
                     $src_exclusions+=$excludedFile_path
                 }    
-            }
-            
+            }    
         }
         elseif ($which_exclusion -eq "[tgt]") {
             if(Test-Path -Path $excludedFile_path -PathType Container) {
@@ -309,6 +308,8 @@ function Compare-Folders {
                 ReferenceObject = (Get-ChildItem -Path $src_folder -Recurse)
                 DifferenceObject = (Get-ChildItem -Path $tgt_folder -Recurse)
             }
+            Write-Log "{DEBUG}(Compare-Folders Get-Difference) Reference object : $($objects.ReferenceObject)"
+            Write-Log "{DEBUG}(Compare-Folders Get-Difference) Difference object : $($objects.ReferenceObject)"
         }
         elseif($exclude -eq $true) {
             # Get elements but exclude files from exclusion arrays
@@ -316,10 +317,11 @@ function Compare-Folders {
                 ReferenceObject = (Get-ChildItem -Path $src_folder -Recurse | Where-Object FullName -NotIn $src_exclusions_array)
                 DifferenceObject = (Get-ChildItem -Path $tgt_folder -Recurse | Where-Object FullName -NotIn $tgt_exclusions_array)
             }
+            Write-Log "{DEBUG}(Compare-Folders Get-Difference) Reference object : $($objects.ReferenceObject)"
+            Write-Log "{DEBUG}(Compare-Folders Get-Difference) Difference object : $($objects.ReferenceObject)"
         }
-        
         # Compare folders
-        return  Compare-Object @objects
+        return Compare-Object @objects
     }
 
     # First, check if given paths exists
@@ -455,11 +457,11 @@ function Copy-Content {
     #>
     $updated_path = $target_folder + $path_split[1]
     if (!($fullPath -in $_source_exclusions)){
-        Write-Log "{INFO} COPYING '$($fullPath)' IN FOLDER '$($updated_path)'"
+        Write-Log "{INFO}(Copy-Content) COPYING '$($fullPath)' IN FOLDER '$($updated_path)'"
         Copy-Item -Path $fullPath -Destination $updated_path -Recurse               
     } else {
         # If it is then log it
-        Write-Log "{INFO} Exclude following file/folder from sync : '$($fullPath)'"
+        Write-Log "{INFO}(Copy-Content) Exclude following file/folder from sync : '$($fullPath)'"
     }
 }
 
@@ -474,16 +476,23 @@ if(!($exclusions -eq "")){
     $source_exclusions, $target_exclusions = Create-ExclusionArrays $exclusions
 }
 
-# Check if target folder is empty (First sync)
+# === Target folder is empty, this is first sync === #
 if((Get-ChildItem -Path $target_folder | Measure-Object).Count -eq 0) {
     # If it is, then copy all source content in target folder
     Write-Log "Target directory is empty, copying content of '$($source_folder)' in '$($target_folder)'"
     Get-ChildItem -Path $source_folder -Recurse | ForEach-Object {
+        # === Start sync === #
+        Write-Log "====== START SYNC ======"
         Copy-Content $PSItem.FullName $source_exclusions
     }
 } else {
-    # This is not the first sync, compare source/target folders to see differences
-    $comparison = Compare-Folders $source_folder $target_folder
+    # === This is not the first sync, compare source/target folders to see differences === #   
+    # Check if there are exclusions arrays or not
+    if(!($exclusions -eq "")){
+        $comparison = Compare-Folders $source_folder $target_folder $source_exclusions $target_exclusions
+    } else {
+        $comparison = Compare-Folders $source_folder $target_folder
+    }
 
     # === Start sync === #
     Write-Log "====== START SYNC ======"
