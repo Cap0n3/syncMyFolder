@@ -33,7 +33,7 @@ Now, to sync in mirror Folder1 (source) but exclude from sync some files/folder 
 Each entry should have this syntax :
 
 ```txt
-[<src/tgt>] <path> like this :
+[<src/tgt>] <path>
 ```
 
 So it would look something like this :
