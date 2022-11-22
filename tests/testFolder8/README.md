@@ -10,9 +10,9 @@ An empty `target folder` and several files and one folder in `source folder` tha
 > **Note :** Don't forget to create an exclusion file with script flag `-f <FileName>` and format file with correct syntax, it should look like this :
 >
 > ```txt
-> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder8\Folder1\SubFolder1\doNotSyncDir
-> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder8\Folder1\SubFolder1\doNotSync1.png
-> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder8\Folder1\doNotSync2.jpg
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder8\Folder1\SubFolder1\doNotSyncDir
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder8\Folder1\SubFolder1\doNotSync1.png
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder8\Folder1\doNotSync2.jpg
 > ```
 
 ## Goal

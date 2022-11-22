@@ -14,12 +14,12 @@ A `target folder` with different files and folders in it BUT ONE folder. **This 
 > **Note :** Don't forget to create an exclusion file with script flag `-f <FileName>` and format file with correct syntax, it should look like this :
 >
 > ```txt
-> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder1\SubFolder1\doNotSyncDir
-> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder1\SubFolder1\doNotSync1.png
-> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder1\doNotSync2.jpg
-> [tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder2\SubFolder1\doNotRemoveDir
-> [tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder2\SubFolder1\doNotRemove1.gp7
-> [tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder7\Folder2\doNotRemove2.doc
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder7\Folder1\SubFolder1\doNotSyncDir
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder7\Folder1\SubFolder1\doNotSync1.png
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder7\Folder1\doNotSync2.jpg
+> [tgt] C:\Users\Kim\SyncMyFolder\tests\testFolder7\Folder2\SubFolder1\doNotRemoveDir
+> [tgt] C:\Users\Kim\SyncMyFolder\tests\testFolder7\Folder2\SubFolder1\doNotRemove1.gp7
+> [tgt] C:\Users\Kim\SyncMyFolder\tests\testFolder7\Folder2\doNotRemove2.doc
 > ```
 
 ## Goal

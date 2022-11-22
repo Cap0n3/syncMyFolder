@@ -10,10 +10,10 @@ A `target folder` with different files and folders in it BUT ONE folder AND a fi
 > **Note :** Don't forget to create an exclusion file with script flag `-f <FileName>` and format file with correct syntax, it should look like this :
 >
 > ```txt
-> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder6\Folder1\SubFolder1\doNotSync1.png
-> [src] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder6\Folder1\doNotSync2.jpg
-> [tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder6\Folder2\SubFolder1\DoNotRemove1.gp7
-> [tgt] C:\Users\EMR\Documents\0_DEV_PROJECTS\0_PS_SCRIPTS\SyncMyFolder\tests\testFolder6\Folder2\DoNotRemove2.doc
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder6\Folder1\SubFolder1\doNotSync1.png
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder6\Folder1\doNotSync2.jpg
+> [tgt] C:\Users\Kim\SyncMyFolder\tests\testFolder6\Folder2\SubFolder1\DoNotRemove1.gp7
+> [tgt] C:\Users\Kim\SyncMyFolder\tests\testFolder6\Folder2\DoNotRemove2.doc
 > ```
 
 ## Goal

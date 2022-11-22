@@ -58,8 +58,12 @@ It's also possible to exclude a specific type of file from sync (works only for 
 For testing simply add flag `-Test <testFolder>` to command, for example to test folder 2 in `Test/` :
 
 ```console
-.\syncMyFolder.ps1 C:\Users\Kim\Folder1 C:\Users\Kim\Folder2 -Test testFolder2
+.\syncMyFolder.ps1 Folder1 Folder2 -Test testFolder2
 ```
+
+> **=> `-Test <folderToBeTested`** - *Name of folder to be tested in tests, simply choose which test you want to run. If you want to create a custom test, see instructions below.*
+
+> **Note :** Here `Folder1` and `Folder2` don't do anything but should be included otherwise it won't work. No special reason for that apart that I'm too lazy to create a special condition for testing ...
 
 There's already a few tests provided but if you wish, you can create new test folders with a custom structure for testing. Parent folder should be named 'testFolder8', 'testFolder9', etc ... Once created, you must create a `.zip` backup of the test folder placed in `0_backup_zip/`  directory, archive will used to restore original structure of test folder after the test synchronization.
 

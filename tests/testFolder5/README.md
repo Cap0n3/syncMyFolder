@@ -8,8 +8,8 @@ A `target folder` with different files and folders in it BUT ONE folder AND a fi
 > **Note :** Don't forget to create an exception file with script flag `-f <FileName>` and format file with correct syntax, it should look like this :
 >
 > ```txt
-> [src] SubFolder1/doNotSync1.png
-> [src] doNotSync2.jpg
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder5\Folder1\SubFolder1\doNotSync1.png
+> [src] C:\Users\Kim\SyncMyFolder\tests\testFolder5\\Folder1\doNotSync2.jpg
 > ```
 
 ## Goal
