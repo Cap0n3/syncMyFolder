@@ -457,13 +457,15 @@ function Copy-Content {
     #>
     $updated_path = $target_folder + $path_split[1]
     if (!($fullPath -in $_source_exclusions)){
-        Write-Log "{INFO}(Copy-Content) COPYING '$($fullPath)' IN FOLDER '$($updated_path)'"
+        
         if (!(Test-Path -Path $fullPath -PathType leaf)){
+            Write-Log "{INFO}(Copy-Content) CREATING FOLDER '$($updated_path)'"
             # If it's a folder, simply create it without its content (to avoid copying excluded files/folder inside)
             New-Item -Path $updated_path -ItemType Directory
         } else {
             # Else, if it's a file just copy to right destination
-            Copy-Item -Path $fullPath -Destination $updated_path -Recurse
+            Write-Log "{INFO}(Copy-Content) COPYING '$($fullPath)' IN FOLDER '$($updated_path)'"
+            Copy-Item -Path $fullPath -Destination $updated_path
         }               
     } else {
         # If it is then log it
